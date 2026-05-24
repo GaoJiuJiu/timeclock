@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getWorkers, getContents, getRecords, addRecord, deleteRecord, subscribe } from '../utils/storage'
 import { formatTime, getDateLabel, getAvatarColor, getInitial, generateId } from '../utils/format'
+import Modal from '../components/Modal'
 
 function Home() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [workers, setWorkers] = useState([])
   const [contents, setContents] = useState([])
   const [showModal, setShowModal] = useState(false)
+  const [toast, setToast] = useState('')
   const [form, setForm] = useState({
     workerId: '',
     date: '',
@@ -20,14 +22,19 @@ function Home() {
   useEffect(() => {
     setWorkers(getWorkers())
     setContents(getContents())
-    const unsubscribe = subscribe(() => {
+    return subscribe(() => {
       setWorkers(getWorkers())
       setContents(getContents())
     })
-    return unsubscribe
   }, [])
 
-  const dateLabel = useMemo(() => getDateLabel(currentDate.getTime()), [currentDate])
+  // toast
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 2000)
+  }
+
+  const dateLabel = getDateLabel(currentDate.getTime())
 
   const changeDate = (delta) => {
     const d = new Date(currentDate)
@@ -37,31 +44,29 @@ function Home() {
 
   const goToday = () => setCurrentDate(new Date())
 
-  const getTodayStr = () => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
+  const toDateString = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   const openAddModal = () => {
-    setForm({ workerId: '', date: getTodayStr(), startTime: '', endTime: '', content: '', customContent: '', note: '' })
+    setForm({ workerId: '', date: toDateString(currentDate), startTime: '', endTime: '', content: '', customContent: '', note: '' })
     setShowModal(true)
   }
 
   const openAddModalFor = (worker) => {
-    setForm({ workerId: worker.id, date: getTodayStr(), startTime: '', endTime: '', content: '', customContent: '', note: '' })
+    setForm({ workerId: worker.id, date: toDateString(currentDate), startTime: '', endTime: '', content: '', customContent: '', note: '' })
     setShowModal(true)
   }
 
-  const closeModal = () => setShowModal(false)
-
-  const getDayRecords = (workerId) => getRecords({ workerId, date: currentDate })
-
-  const getDayHours = (workerId) => {
-    const records = getDayRecords(workerId)
+  // 缓存每天每个工人的记录，避免重复计算
+  const dayRecordsMap = {}
+  const dayHoursMap = {}
+  workers.forEach((w) => {
+    const recs = getRecords({ workerId: w.id, date: currentDate })
+    dayRecordsMap[w.id] = recs
     let totalMs = 0
-    records.forEach(r => { if (r.endTime) totalMs += r.endTime - r.startTime })
-    return totalMs / 1000 / 3600
-  }
+    recs.forEach(r => { if (r.endTime) totalMs += r.endTime - r.startTime })
+    dayHoursMap[w.id] = totalMs / 1000 / 3600
+  })
 
   const getDuration = (record) => {
     if (record.endTime) return ((record.endTime - record.startTime) / 1000 / 3600).toFixed(1)
@@ -96,9 +101,11 @@ function Home() {
       note: form.note,
       createdAt: Date.now()
     })
-    alert('添加成功！')
-    closeModal()
+    setShowModal(false)
+    showToast('添加成功！')
   }
+
+  const updateForm = (patch) => setForm(prev => ({ ...prev, ...patch }))
 
   return (
     <div className="page-content">
@@ -117,42 +124,47 @@ function Home() {
       </div>
 
       <div className="worker-list">
-        {workers.map((worker, idx) => (
-          <div key={worker.id} className="worker-card">
-            <div className="worker-top">
-              <div className="worker-name-row">
-                <div className="worker-avatar" style={{ background: getAvatarColor(idx) }}>
-                  {getInitial(worker.name)}
-                </div>
-                <span className="worker-name">{worker.name}</span>
-              </div>
-            </div>
+        {workers.map((worker, idx) => {
+          const records = dayRecordsMap[worker.id] || []
+          const hours = dayHoursMap[worker.id] || 0
 
-            {getDayRecords(worker.id).length > 0 && (
-              <div className="segments">
-                {getDayRecords(worker.id).map(rec => (
-                  <div key={rec.id} className="segment">
-                    <span className="segment-time">
-                      {formatTime(rec.startTime)} — {rec.endTime ? formatTime(rec.endTime) : '进行中'}
-                    </span>
-                    <span className="segment-content">{rec.content || '未填写'}</span>
-                    <span className="segment-hours">{getDuration(rec)}h</span>
-                    <button className="segment-delete" onClick={() => handleDeleteRecord(rec.id)}>✕</button>
+          return (
+            <div key={worker.id} className="worker-card">
+              <div className="worker-top">
+                <div className="worker-name-row">
+                  <div className="worker-avatar" style={{ background: getAvatarColor(idx) }}>
+                    {getInitial(worker.name)}
                   </div>
-                ))}
+                  <span className="worker-name">{worker.name}</span>
+                </div>
               </div>
-            )}
 
-            <button className="add-btn" onClick={() => openAddModalFor(worker)}>+ 添加工时</button>
+              {records.length > 0 && (
+                <div className="segments">
+                  {records.map(rec => (
+                    <div key={rec.id} className="segment">
+                      <span className="segment-time">
+                        {formatTime(rec.startTime)} — {rec.endTime ? formatTime(rec.endTime) : '进行中'}
+                      </span>
+                      <span className="segment-content">{rec.content || '未填写'}</span>
+                      <span className="segment-hours">{getDuration(rec)}h</span>
+                      <button className="segment-delete" onClick={() => handleDeleteRecord(rec.id)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {getDayRecords(worker.id).length > 0 && (
-              <div className="day-total">
-                <span>合计</span>
-                <span className="day-total-hours">{getDayHours(worker.id).toFixed(1)}h</span>
-              </div>
-            )}
-          </div>
-        ))}
+              <button className="add-btn" onClick={() => openAddModalFor(worker)}>+ 添加工时</button>
+
+              {records.length > 0 && (
+                <div className="day-total">
+                  <span>合计</span>
+                  <span className="day-total-hours">{hours.toFixed(1)}h</span>
+                </div>
+              )}
+            </div>
+          )
+        })}
 
         {workers.length === 0 && (
           <div className="empty">
@@ -162,62 +174,55 @@ function Home() {
         )}
       </div>
 
-      {showModal && (
-        <div className="overlay show" onClick={(e) => e.target.classList.contains('overlay') && closeModal()}>
-          <div className="modal">
-            <div className="modal-header">
-              <h2 className="modal-title">添加工时记录</h2>
-              <button className="modal-close" onClick={closeModal}>✕</button>
-            </div>
+      <Modal show={showModal} onClose={() => setShowModal(false)} title="添加工时记录">
+        <div className="form-group">
+          <label className="form-label">工人</label>
+          <select className="form-input" value={form.workerId} onChange={e => updateForm({ workerId: e.target.value })}>
+            <option value="">请选择工人</option>
+            {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+          </select>
+        </div>
 
-            <div className="form-group">
-              <label className="form-label">工人</label>
-              <select className="form-input" value={form.workerId} onChange={e => setForm({ ...form, workerId: e.target.value })}>
-                <option value="">请选择工人</option>
-                {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-              </select>
-            </div>
+        <div className="form-group">
+          <label className="form-label">日期</label>
+          <input type="date" className="form-input" value={form.date} onChange={e => updateForm({ date: e.target.value })} />
+        </div>
 
-            <div className="form-group">
-              <label className="form-label">日期</label>
-              <input type="date" className="form-input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-            </div>
-
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">开始时间</label>
-                <input type="time" className="form-input" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">结束时间</label>
-                <input type="time" className="form-input" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">工作内容</label>
-              <div className="content-tags">
-                {contents.map(c => (
-                  <span key={c} className={`content-tag ${form.content === c ? 'selected' : ''}`} onClick={() => setForm({ ...form, content: c, customContent: '' })}>
-                    {c}
-                  </span>
-                ))}
-              </div>
-              <input className="form-input" placeholder="或输入其他内容..." value={form.customContent} onChange={e => setForm({ ...form, customContent: e.target.value, content: '' })} />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">备注（可选）</label>
-              <input className="form-input" placeholder="备注..." value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            </div>
-
-            <div className="modal-btns">
-              <button className="modal-btn cancel" onClick={closeModal}>取消</button>
-              <button className="modal-btn confirm" onClick={handleSubmit}>确认添加</button>
-            </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label className="form-label">开始时间</label>
+            <input type="time" className="form-input" value={form.startTime} onChange={e => updateForm({ startTime: e.target.value })} />
+          </div>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label className="form-label">结束时间</label>
+            <input type="time" className="form-input" value={form.endTime} onChange={e => updateForm({ endTime: e.target.value })} />
           </div>
         </div>
-      )}
+
+        <div className="form-group">
+          <label className="form-label">工作内容</label>
+          <div className="content-tags">
+            {contents.map(c => (
+              <span key={c} className={`content-tag ${form.content === c ? 'selected' : ''}`} onClick={() => updateForm({ content: c, customContent: '' })}>
+                {c}
+              </span>
+            ))}
+          </div>
+          <input className="form-input" placeholder="或输入其他内容..." value={form.customContent} onChange={e => updateForm({ customContent: e.target.value, content: '' })} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">备注（可选）</label>
+          <input className="form-input" placeholder="备注..." value={form.note} onChange={e => updateForm({ note: e.target.value })} />
+        </div>
+
+        <div className="modal-btns">
+          <button className="modal-btn cancel" onClick={() => setShowModal(false)}>取消</button>
+          <button className="modal-btn confirm" onClick={handleSubmit}>确认添加</button>
+        </div>
+      </Modal>
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
