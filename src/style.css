@@ -334,6 +334,26 @@ html, body, #root {
   color: var(--text); font-family: inherit;
 }
 .form-input:focus { outline: none; border-color: var(--primary); background: #fff; }
+.form-input[type="date"],
+.form-input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* iOS Safari time input fix */
+.form-input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.form-input[type="time"]::-webkit-calendar-picker-indicator {
+  display: block;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
 
 .content-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .content-tag {

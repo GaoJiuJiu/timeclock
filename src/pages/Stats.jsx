@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { getWorkers, getRecords, subscribe } from '../utils/storage'
+import { useState, useEffect, useMemo } from 'react'
+import { getWorkers, getRecords, subscribe, fetchAll } from '../utils/storage'
 import { getWeekRange, getMonthRange } from '../utils/format'
-import * as XLSX from 'xlsx'
+import { exportSalaryExcel } from '../utils/excel'
 
 function Stats() {
   const [workers, setWorkers] = useState([])
@@ -11,12 +11,11 @@ function Stats() {
   const [customEndDate, setCustomEndDate] = useState('')
 
   useEffect(() => {
-    setWorkers(getWorkers())
+    fetchAll()
     const now = new Date()
     setCustomStartDate(formatDateInput(new Date(now.getFullYear(), now.getMonth(), 1)))
     setCustomEndDate(formatDateInput(new Date(now.getFullYear(), now.getMonth() + 1, 0)))
-    const unsubscribe = subscribe(() => setWorkers(getWorkers()))
-    return unsubscribe
+    return subscribe(() => setWorkers(getWorkers()))
   }, [])
 
   const formatDateInput = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -69,15 +68,25 @@ function Stats() {
         startDate: dateRange.start.getTime(),
         endDate: dateRange.end.getTime()
       })
+
       let totalMs = 0
       const days = new Set()
+
       records.forEach(r => {
         const duration = r.endTime ? r.endTime - r.startTime : 0
         totalMs += duration
         days.add(new Date(r.startTime).toDateString())
       })
+
       const hours = totalMs / 1000 / 3600
-      return { workerId: w.id, name: w.name, days: days.size, hours, amount: hours * w.hourlyRate }
+
+      return {
+        workerId: w.id,
+        name: w.name,
+        days: days.size,
+        hours,
+        amount: hours * w.hourlyRate
+      }
     })
   }, [workers, dateRange])
 
@@ -92,25 +101,6 @@ function Stats() {
       setCustomStartDate(formatDateInput(new Date(now.getFullYear(), now.getMonth(), 1)))
       setCustomEndDate(formatDateInput(new Date(now.getFullYear(), now.getMonth() + 1, 0)))
     }
-  }
-
-  const exportExcel = () => {
-    const data = tableData.map((row, idx) => ({
-      '序号': idx + 1,
-      '姓名': row.name,
-      '出勤天数': row.days,
-      '工时(小时)': row.hours.toFixed(1),
-      '时薪(元)': workers.find(w => w.id === row.workerId)?.hourlyRate || 0,
-      '应发工资(元)': row.amount.toFixed(0)
-    }))
-    data.push({ '序号': '', '姓名': '合计', '出勤天数': '', '工时(小时)': totalHours.toFixed(1), '时薪(元)': '', '应发工资(元)': totalAmount.toFixed(0) })
-
-    const ws = XLSX.utils.json_to_sheet(data)
-    ws['!cols'] = [{ wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }]
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, '工资表')
-    const filename = `工资表_${periodLabel.replace(/[年月日\s—]+/g, '_')}.xlsx`
-    XLSX.writeFile(wb, filename)
   }
 
   return (
@@ -178,7 +168,7 @@ function Stats() {
         {tableData.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)' }}>暂无数据</div>}
       </div>
 
-      <button className="export-btn" onClick={exportExcel}>📥 导出Excel工资表</button>
+      <button className="export-btn" onClick={() => exportSalaryExcel(dateRange, periodLabel)}>📥 导出Excel工资表</button>
     </div>
   )
 }

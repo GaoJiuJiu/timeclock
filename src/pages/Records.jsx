@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { getWorkers, getRecords, subscribe } from '../utils/storage'
+import { useState, useEffect, useMemo } from 'react'
+import { getWorkers, getRecords, subscribe, fetchAll } from '../utils/storage'
 import { formatTime, getDateLabel, getAvatarColor, getInitial } from '../utils/format'
 
 function Records() {
@@ -8,13 +8,11 @@ function Records() {
   const [records, setRecords] = useState([])
 
   useEffect(() => {
-    setWorkers(getWorkers())
-    setRecords(getRecords())
-    const unsubscribe = subscribe(() => {
+    fetchAll()
+    return subscribe(() => {
       setWorkers(getWorkers())
       setRecords(getRecords())
     })
-    return unsubscribe
   }, [])
 
   const filteredRecords = useMemo(() => {
@@ -54,7 +52,7 @@ function Records() {
 
       <div className="stat-tabs" style={{ marginBottom: 16 }}>
         <button className={`stat-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>全部</button>
-        {workers.slice(0, 3).map(w => (
+        {workers.map(w => (
           <button key={w.id} className={`stat-tab ${filter === w.id ? 'active' : ''}`} onClick={() => setFilter(w.id)}>
             {w.name}
           </button>
