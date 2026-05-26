@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getContents, getSettings, addContent, deleteContent, getWorkers, getRecords, exportData, importData, clearAll, loadMockData, subscribe, fetchAll, logout } from '../utils/storage'
+import { getContents, getSettings, saveSettings, addContent, deleteContent, getWorkers, getRecords, exportData, importData, clearAll, loadMockData, subscribe, fetchAll, logout } from '../utils/storage'
 import { getMonthRange } from '../utils/format'
 import { exportSalaryExcel } from '../utils/excel'
 import Modal from '../components/Modal'
@@ -9,6 +9,8 @@ function Settings() {
   const [settings, setSettings] = useState({})
   const [workers, setWorkers] = useState([])
   const [showContentModal, setShowContentModal] = useState(false)
+  const [showRateModal, setShowRateModal] = useState(false)
+  const [newRate, setNewRate] = useState('')
   const [newContent, setNewContent] = useState('')
   const [toast, setToast] = useState('')
   const fileInputRef = useRef(null)
@@ -94,6 +96,16 @@ function Settings() {
     }
   }
 
+  const handleSaveRate = async () => {
+    if (!newRate || Number(newRate) <= 0) {
+      alert('请输入有效的时薪')
+      return
+    }
+    await saveSettings({ ...settings, defaultHourlyRate: Number(newRate) })
+    setShowRateModal(false)
+    showToast('默认时薪已更新～')
+  }
+
   return (
     <div className="page-content">
       <div className="topbar">
@@ -110,9 +122,9 @@ function Settings() {
 
       <div className="setting-group">
         <div className="setting-group-title">计薪方式</div>
-        <div className="setting-item">
+        <div className="setting-item" onClick={() => { setNewRate(settings.defaultHourlyRate || 10); setShowRateModal(true) }}>
           <span className="setting-label">默认时薪</span>
-          <span className="setting-value">¥{settings.defaultHourlyRate}/小时</span>
+          <span className="setting-value">¥{settings.defaultHourlyRate || 10}/小时 ✏️</span>
         </div>
       </div>
 
@@ -174,6 +186,27 @@ function Settings() {
 
         <div className="modal-btns" style={{ marginTop: 24 }}>
           <button className="modal-btn cancel" onClick={() => setShowContentModal(false)}>关闭</button>
+        </div>
+      </Modal>
+
+      <Modal show={showRateModal} onClose={() => setShowRateModal(false)} title="修改默认时薪">
+        <div className="form-group">
+          <label className="form-label">默认时薪（元/小时）</label>
+          <input 
+            type="number" 
+            step="0.5"
+            className="form-input" 
+            placeholder="10" 
+            value={newRate} 
+            onChange={e => setNewRate(e.target.value)} 
+          />
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 8 }}>
+          此为新建人员时的默认时薪，已有人员的时薪不受影响～
+        </p>
+        <div className="modal-btns" style={{ marginTop: 24 }}>
+          <button className="modal-btn cancel" onClick={() => setShowRateModal(false)}>取消</button>
+          <button className="modal-btn confirm" onClick={handleSaveRate}>保存</button>
         </div>
       </Modal>
     </div>

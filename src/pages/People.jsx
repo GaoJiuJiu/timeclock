@@ -1,22 +1,26 @@
 import { useState, useEffect } from 'react'
-import { getWorkers, saveWorker, deleteWorker, getRecords, subscribe, fetchAll } from '../utils/storage'
+import { getWorkers, saveWorker, deleteWorker, getRecords, getSettings, subscribe, fetchAll } from '../utils/storage'
 import { getAvatarColor, getInitial, generateId } from '../utils/format'
 import Modal from '../components/Modal'
 
 function People() {
   const [workers, setWorkers] = useState([])
+  const [settings, setSettings] = useState({})
   const [showModal, setShowModal] = useState(false)
   const [editingWorker, setEditingWorker] = useState(null)
   const [form, setForm] = useState({ name: '', payType: 'hourly', rate: '', phone: '' })
 
   useEffect(() => {
     fetchAll()
-    return subscribe(() => setWorkers(getWorkers()))
+    return subscribe(() => {
+      setWorkers(getWorkers())
+      setSettings(getSettings())
+    })
   }, [])
 
   const openAddModal = () => {
     setEditingWorker(null)
-    setForm({ name: '', payType: 'hourly', rate: '', phone: '' })
+    setForm({ name: '', payType: 'hourly', rate: settings.defaultHourlyRate || 10, phone: '' })
     setShowModal(true)
   }
 
