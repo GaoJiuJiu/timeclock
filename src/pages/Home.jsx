@@ -98,7 +98,7 @@ function Home() {
   }
 
   const handleDeleteRecord = async (id) => {
-    if (window.confirm('确定删除这条记录吗？')) await deleteRecord(id)
+    if (window.confirm('要删除这条记录吗？没关系的，删了就删了～')) await deleteRecord(id)
   }
 
   const handleSubmit = async () => {
@@ -126,7 +126,7 @@ function Home() {
       createdAt: Date.now()
     })
     setShowModal(false)
-    showToast('添加成功！')
+    showToast('记录好啦～')
   }
 
   const updateForm = (patch) => setForm(prev => ({ ...prev, ...patch }))
@@ -134,7 +134,7 @@ function Home() {
   return (
     <div className="page-content">
       <div className="topbar">
-        <h1 className="topbar-title">厂里考勤</h1>
+        <h1 className="topbar-title">小确幸记工</h1>
         <button className="topbar-btn" onClick={openAddModal}>＋</button>
       </div>
 
@@ -193,7 +193,7 @@ function Home() {
         {workers.length === 0 && (
           <div className="empty">
             <div className="empty-icon">👥</div>
-            <div className="empty-text">还没有工人<br/>去「人员」页面添加吧</div>
+            <div className="empty-text">还没有小伙伴呀<br/>去「人员」页面添加吧～</div>
           </div>
         )}
       </div>

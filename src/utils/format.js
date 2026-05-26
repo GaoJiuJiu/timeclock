@@ -55,7 +55,19 @@ export function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 }
 
-const AVATAR_COLORS = ['#7C3AED', '#0891B2', '#059669', '#D97706', '#DC2626', '#2563EB', '#DB2777', '#4F46E5']
+// 马卡龙色系头像颜色（柔和温暖）
+const AVATAR_COLORS = [
+  '#FFB5BA', // 樱花粉
+  '#B5DEFF', // 天空蓝
+  '#C5F0AD', // 薄荷绿
+  '#FFE5B4', // 蜜桃橘
+  '#E0BBE4', // 薰衣草紫
+  '#B5EAD7', // 抹茶绿
+  '#FFDAC1', // 珊瑚橘
+  '#C7CEEA', // 丁香紫
+  '#E2F0CB', // 柠檬黄
+  '#FFB7B2'  // 玫瑰红
+]
 
 export function getAvatarColor(index) {
   return AVATAR_COLORS[index % AVATAR_COLORS.length]

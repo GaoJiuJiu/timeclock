@@ -79,17 +79,17 @@ function Settings() {
 
   const doLoadMockData = async () => {
     if (workers.length > 0) {
-      if (!window.confirm('已有数据，加载示例数据会覆盖。确定继续？')) return
+      if (!window.confirm('已有数据了，加载示例会覆盖掉哦～确定继续吗？')) return
     }
     await loadMockData()
     showToast('示例数据已加载！')
   }
 
   const doClear = async () => {
-    if (window.confirm('确定清除所有数据吗？此操作不可恢复！')) {
-      if (window.confirm('再次确认：真的要清除吗？')) {
+    if (window.confirm('要清除所有数据吗？慎重哦～')) {
+      if (window.confirm('真的要清空吗？清了就回不来啦')) {
         await clearAll()
-        showToast('数据已清除')
+        showToast('已清空，重新开始吧～')
       }
     }
   }
@@ -135,20 +135,20 @@ function Settings() {
           <span className="setting-value">从文件恢复</span>
         </div>
         <div className="setting-item" onClick={doClear} style={{ color: 'var(--red)' }}>
-          <span className="setting-label" style={{ color: 'var(--red)' }}>清除所有数据</span>
-          <span className="setting-value" style={{ color: 'var(--red)' }}>⚠ 不可恢复</span>
+          <span className="setting-label" style={{ color: 'var(--red)' }}>清空所有数据</span>
+          <span className="setting-value" style={{ color: 'var(--red)' }}>重新开始</span>
         </div>
       </div>
 
       <div className="setting-group">
         <div className="setting-group-title">账号</div>
-        <div className="setting-item" onClick={() => { if (window.confirm('确定退出登录？')) logout() }} style={{ color: 'var(--red)' }}>
+<div className="setting-item" onClick={() => { if (window.confirm('要退出登录吗？')) logout() }} style={{ color: 'var(--red)' }}>
           <span className="setting-label" style={{ color: 'var(--red)' }}>退出登录</span>
-          <span className="setting-value">切换账号</span>
+          <span className="setting-value">换个账号试试</span>
         </div>
       </div>
 
-      <div className="version">厂里考勤 v1.0 · 让每一分工都算数</div>
+      <div className="version">小确幸记工 · 记录每一份美好 💫</div>
 
       {toast && <div className="toast">{toast}</div>}
 

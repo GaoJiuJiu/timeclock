@@ -49,7 +49,7 @@ function People() {
   }
 
   const handleDelete = async (worker) => {
-    if (window.confirm(`确定删除 ${worker.name} 吗？相关考勤记录不会删除。`)) {
+    if (window.confirm(`要移除 ${worker.name} 吗？TA的记录会保留着的～`)) {
       await deleteWorker(worker.id)
     }
   }
@@ -116,13 +116,13 @@ function People() {
       {workers.length === 0 && (
         <div className="empty">
           <div className="empty-icon">👥</div>
-          <div className="empty-text">还没有工人，点击右上角添加</div>
+          <div className="empty-text">还没有小伙伴<br/>点击右上角添加吧～</div>
         </div>
       )}
 
-      {workers.length > 0 && <button className="export-btn" onClick={openAddModal}>+ 添加工人</button>}
+      {workers.length > 0 && <button className="export-btn" onClick={openAddModal}>+ 添加小伙伴</button>}
 
-      <Modal show={showModal} onClose={() => setShowModal(false)} title={editingWorker ? '编辑工人' : '添加工人'}>
+      <Modal show={showModal} onClose={() => setShowModal(false)} title={editingWorker ? '编辑信息' : '添加小伙伴'}>
         <div className="form-group">
           <label className="form-label">姓名</label>
           <input className="form-input" placeholder="输入姓名" value={form.name} onChange={e => updateForm({ name: e.target.value })} />
