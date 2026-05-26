@@ -547,3 +547,557 @@ html, body, #root {
   color: var(--text-3);
 }
 
+/* 结算状态区域 */
+.settlement-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.settlement-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settlement-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settlement-badge.settled {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.settlement-badge.pending {
+  background: var(--yellow-light);
+  color: var(--yellow);
+}
+
+.settlement-time {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.settlement-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--green);
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.settlement-btn.undo {
+  background: var(--text-2);
+}
+
+
+/* ========== 结算页面 ========== */
+.worker-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.worker-tab {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.worker-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.card-section {
+  background: white;
+  margin: 12px;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.summary-card {
+  padding: 16px;
+  border-radius: var(--radius);
+}
+
+.summary-card.unsettled {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border: 1px solid #ffc107;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.summary-label {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.summary-badge {
+  background: #ff9800;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.summary-body .summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.summary-amount {
+  font-weight: 600;
+  font-size: 18px;
+  color: #e65100;
+}
+
+.settle-btn {
+  width: 100%;
+  padding: 12px;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.day-card {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+}
+
+.day-card.unsettled {
+  background: #fff8e1;
+  border-color: #ffcc80;
+}
+
+.day-card.settled {
+  background: #e8f5e9;
+  border-color: #a5d6a7;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.day-date {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.day-stats {
+  font-size: 14px;
+  color: #666;
+}
+
+.day-stats.settled {
+  color: #2e7d32;
+}
+
+.day-records {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.record-mini {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.record-content {
+  color: #666;
+}
+
+.day-action {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.settle-day-btn {
+  padding: 6px 14px;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-btn {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid #4caf50;
+  color: #4caf50;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.undo-btn {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid #999;
+  color: #666;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.settlement-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* 弹窗 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modal-title.success {
+  color: #4caf50;
+}
+
+.modal-body {
+  margin-bottom: 16px;
+}
+
+.settle-preview {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.preview-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.preview-total {
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.total-amount {
+  color: #e65100;
+}
+
+.note-input {
+  margin-top: 16px;
+}
+
+.note-input label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.note-input input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel, .btn-confirm, .btn-copy {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.btn-confirm {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-copy {
+  background: white;
+  border: 1px solid #2196f3;
+  color: #2196f3;
+}
+
+.receipt-content {
+  font-family: monospace;
+  font-size: 12px;
+  background: #fafafa;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-3);
+}
+/* 覆盖结算页面的颜色 */
+
+/* 未结算卡片 - 改用柔和的蓝绿色 */
+.summary-card.unsettled {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+}
+
+.summary-badge {
+  background: #42a5f5;
+  color: white;
+}
+
+.summary-amount {
+  color: #1565c0;
+}
+
+.settle-btn {
+  background: #42a5f5;
+}
+
+.settle-btn:hover {
+  background: #1e88e5;
+}
+
+/* 未结明细卡片 */
+.day-card.unsettled {
+  background: #f5f9ff;
+  border-color: #bbdefb;
+}
+
+.settle-day-btn {
+  background: #42a5f5;
+  color: white;
+}
+
+/* 已结卡片 - 改用柔和的绿色 */
+.day-card.settled {
+  background: #f1f8e9;
+  border-color: #c5e1a5;
+}
+
+.day-stats.settled {
+  color: #558b2f;
+}
+
+.summary-amount.settled {
+  color: #558b2f;
+}
+
+/* 查看全部按钮 */
+.view-all-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: white;
+  border: 1px solid #42a5f5;
+  color: #42a5f5;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.view-all-btn:hover {
+  background: #e3f2fd;
+}
+
+/* 返回按钮 */
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-1);
+  cursor: pointer;
+  padding-right: 12px;
+}
+
+/* 结算历史页面 */
+.history-summary {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.summary-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.history-item {
+  padding: 14px;
+  background: #fafafa;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.history-worker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.worker-avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.worker-name {
+  font-weight: 500;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.history-amount {
+  font-size: 18px;
+  font-weight: 600;
+  color: #558b2f;
+}
+
+.history-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #666;
+}
+
+.history-time {
+  color: #999;
+}
+
+.history-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.history-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

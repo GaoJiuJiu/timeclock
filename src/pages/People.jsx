@@ -79,7 +79,7 @@ function People() {
 
   const getPayTypeLabel = (worker) => {
     const type = worker.payType || 'hourly'
-    const rate = worker.rate || worker.hourlyRate || 25
+    const rate = worker.rate || worker.hourlyRate || settings.defaultHourlyRate || 10
     if (type === 'daily') {
       return `日薪 ¥${rate}`
     }

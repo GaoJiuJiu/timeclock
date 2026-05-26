@@ -108,9 +108,22 @@ function Home() {
     if (!form.endTime) return alert('请填写结束时间')
 
     const startTimestamp = new Date(`${form.date}T${form.startTime}`).getTime()
-    const endTimestamp = new Date(`${form.date}T${form.endTime}`).getTime()
+    let endTimestamp = new Date(`${form.date}T${form.endTime}`).getTime()
+    let crossDay = false
 
-    if (endTimestamp <= startTimestamp) return alert('结束时间必须大于开始时间')
+    // 如果结束时间小于开始时间，提示确认跨天
+    if (endTimestamp <= startTimestamp) {
+      crossDay = true
+      const endDate = new Date(`${form.date}T${form.endTime}`)
+      endDate.setDate(endDate.getDate() + 1)
+      endTimestamp = endDate.getTime()
+      
+      // 确认跨天
+      const durationHours = ((endTimestamp - startTimestamp) / 1000 / 3600).toFixed(1)
+      if (!window.confirm(`结束时间小于开始时间，识别为跨天打卡\n工作时间：${form.startTime} → 第二天 ${form.endTime}（共 ${durationHours} 小时）\n\n确认提交？`)) {
+        return
+      }
+    }
 
     const worker = workers.find(w => w.id === form.workerId)
     const content = form.customContent || form.content || '未填写'
@@ -134,7 +147,7 @@ function Home() {
   return (
     <div className="page-content">
       <div className="topbar">
-        <h1 className="topbar-title">小确幸记工</h1>
+        <h1 className="topbar-title">天天幸运</h1>
         <button className="topbar-btn" onClick={openAddModal}>＋</button>
       </div>
 

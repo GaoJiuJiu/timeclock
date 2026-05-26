@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getWorkers, getRecords, subscribe, fetchAll } from '../utils/storage'
+import { getWorkers, getRecords, subscribe, fetchAll, getSettlementStatus, setSettlementStatus, getPeriodKey } from '../utils/storage'
 import { getWeekRange, getMonthRange } from '../utils/format'
 import { exportSalaryExcel } from '../utils/excel'
 
@@ -9,6 +9,7 @@ function Stats() {
   const [periodOffset, setPeriodOffset] = useState(0)
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [settlementStatus, setSettlementStatusState] = useState({ settled: false, settledAt: null })
 
   useEffect(() => {
     fetchAll()
@@ -49,6 +50,21 @@ function Stats() {
     }
   }, [period, periodOffset, customStartDate, customEndDate])
 
+  // 当 dateRange 变化时，获取结算状态
+  useEffect(() => {
+    const periodKey = getPeriodKey(dateRange)
+    const status = getSettlementStatus(periodKey)
+    setSettlementStatusState(status)
+  }, [dateRange])
+
+  // 切换结算状态
+  const toggleSettlement = async () => {
+    const periodKey = getPeriodKey(dateRange)
+    const newStatus = !settlementStatus.settled
+    await setSettlementStatus(periodKey, newStatus)
+    setSettlementStatusState({ settled: newStatus, settledAt: newStatus ? Date.now() : null })
+  }
+
   const periodLabel = useMemo(() => {
     if (period === 'custom') {
       const s = new Date(customStartDate)
@@ -80,7 +96,7 @@ function Stats() {
 
       const hours = totalMs / 1000 / 3600
       const payType = w.payType || 'hourly'
-      const rate = w.rate || w.hourlyRate || 25
+      const rate = w.rate || w.hourlyRate || settings.defaultHourlyRate || 10
       
       // 按天计费用天数，按时薪用工时
       const amount = payType === 'daily' ? days.size * rate : hours * rate
@@ -173,6 +189,30 @@ function Stats() {
           </div>
         ))}
         {tableData.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)' }}>暂无数据</div>}
+      </div>
+
+      {/* 结算状态区域 */}
+      <div className="settlement-area">
+        <div className="settlement-status">
+          {settlementStatus.settled ? (
+            <>
+              <span className="settlement-badge settled">✓ 已结</span>
+              {settlementStatus.settledAt && (
+                <span className="settlement-time">
+                  {new Date(settlementStatus.settledAt).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="settlement-badge pending">待结算</span>
+          )}
+        </div>
+        <button 
+          className={`settlement-btn ${settlementStatus.settled ? 'undo' : ''}`}
+          onClick={toggleSettlement}
+        >
+          {settlementStatus.settled ? '撤销结算' : '标记已结'}
+        </button>
       </div>
 
       <button className="export-btn" onClick={() => exportSalaryExcel(dateRange, periodLabel)}>📥 导出Excel工资表</button>

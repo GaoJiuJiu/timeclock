@@ -4,6 +4,8 @@ import Home from './pages/Home'
 import People from './pages/People'
 import Records from './pages/Records'
 import Stats from './pages/Stats'
+import Settle from './pages/Settle'
+import SettleHistory from './pages/SettleHistory'
 import Settings from './pages/Settings'
 import { isAuthenticated, subscribeAuth, login, logout } from './utils/storage'
 
@@ -121,6 +123,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/people" element={<People />} />
         <Route path="/records" element={<Records />} />
+        <Route path="/settle" element={<Settle />} />
+        <Route path="/settle-history" element={<SettleHistory />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
@@ -138,9 +142,9 @@ function App() {
           <span className="nav-icon">📋</span>
           <span className="nav-text">记录</span>
         </NavLink>
-        <NavLink to="/stats" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
-          <span className="nav-icon">📊</span>
-          <span className="nav-text">统计</span>
+        <NavLink to="/settle" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
+          <span className="nav-icon">💰</span>
+          <span className="nav-text">结算</span>
         </NavLink>
         <NavLink to="/settings" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">⚙️</span>

@@ -70,7 +70,7 @@ export function logout() {
   notifyAuth()
 }
 
-function getAuthToken() {
+export function getAuthToken() {
   return localStorage.getItem(KEYS.AUTH_TOKEN) || ''
 }
 
@@ -315,6 +315,32 @@ export async function saveSettings(settings) {
     localStorage.setItem(KEYS.SETTINGS, JSON.stringify(_settings))
     notify()
   }
+}
+
+// ========== 结算状态 ==========
+
+// 生成周期标识 key
+export function getPeriodKey(dateRange) {
+  const start = new Date(dateRange.start)
+  const end = new Date(dateRange.end)
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  return `${fmt(start)}_${fmt(end)}`
+}
+
+// 获取某周期的结算状态
+export function getSettlementStatus(periodKey) {
+  const settlements = _settings.settlements || {}
+  return settlements[periodKey] || { settled: false, settledAt: null }
+}
+
+// 设置某周期的结算状态
+export async function setSettlementStatus(periodKey, settled) {
+  const settlements = _settings.settlements || {}
+  settlements[periodKey] = {
+    settled,
+    settledAt: settled ? Date.now() : null
+  }
+  await saveSettings({ ..._settings, settlements })
 }
 
 // ========== Export / Import ==========

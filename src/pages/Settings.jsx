@@ -39,11 +39,11 @@ function Settings() {
     if (window.confirm(`删除工作内容「${content}」？`)) await deleteContent(content)
   }
 
-  const exportCurrentMonthExcel = () => {
+  const exportCurrentMonthExcel = async () => {
     const now = new Date()
     const range = getMonthRange(now)
     const label = `${now.getFullYear()}年${now.getMonth() + 1}月`
-    exportSalaryExcel(range, label)
+    await exportSalaryExcel(range, label)
   }
 
   const exportJSON = () => {
@@ -160,7 +160,7 @@ function Settings() {
         </div>
       </div>
 
-      <div className="version">小确幸记工 · 记录每一份美好 💫</div>
+      <div className="version">天天幸运 · 记录每一份美好 💫</div>
 
       {toast && <div className="toast">{toast}</div>}
 
