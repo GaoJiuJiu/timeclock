@@ -1,15 +1,10 @@
-const KEYS = {
-  WORKERS: 'tc_workers',
-  RECORDS: 'tc_records',
-  CONTENTS: 'tc_contents',
-  SETTINGS: 'tc_settings'
-}
+// API 配置
+const API_BASE = ''  // 相对路径，前后端同域
 
-const defaultContents = ['剥辣条', '打料', '晾晒', '包装', '搬运']
-
+let _token = localStorage.getItem('tc_token') || ''
 let _workers = []
 let _records = []
-let _contents = defaultContents
+let _contents = []
 let _settings = { defaultHourlyRate: 25 }
 
 // 订阅回调
@@ -24,61 +19,111 @@ export function subscribe(fn) {
   return () => listeners.delete(fn)
 }
 
-function loadFromStorage() {
-  const w = localStorage.getItem(KEYS.WORKERS)
-  _workers = w ? JSON.parse(w) : []
+// ============ 认证 ============
 
-  const r = localStorage.getItem(KEYS.RECORDS)
-  _records = r ? JSON.parse(r) : []
-
-  const c = localStorage.getItem(KEYS.CONTENTS)
-  _contents = c ? JSON.parse(c) : defaultContents
-
-  const s = localStorage.getItem(KEYS.SETTINGS)
-  _settings = s ? JSON.parse(s) : { defaultHourlyRate: 25 }
+export function isLoggedIn() {
+  return !!_token
 }
 
-function save(key, data) {
-  localStorage.setItem(key, JSON.stringify(data))
+export function getToken() {
+  return _token
 }
 
-loadFromStorage()
+export async function login(password) {
+  const res = await fetch(`${API_BASE}/api/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  })
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || '登录失败')
+  }
+  
+  const data = await res.json()
+  _token = data.token
+  localStorage.setItem('tc_token', _token)
+  return data
+}
 
-// Workers
+export function logout() {
+  _token = ''
+  localStorage.removeItem('tc_token')
+  notify()
+}
+
+// ============ API 请求封装 ============
+
+async function api(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  }
+  
+  if (_token) {
+    headers['Authorization'] = `Bearer ${_token}`
+  }
+  
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  })
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || '请求失败')
+  }
+  
+  return res.json()
+}
+
+// ============ Workers ============
+
 export function getWorkers() { return _workers }
 
-export function saveWorker(worker) {
-  const idx = _workers.findIndex(w => w.id === worker.id)
-  if (idx > -1) _workers[idx] = worker
-  else _workers.push(worker)
-  save(KEYS.WORKERS, _workers)
+export async function fetchWorkers() {
+  _workers = await api('/api/workers')
   notify()
 }
 
-export function deleteWorker(id) {
-  _workers = _workers.filter(w => w.id !== id)
-  save(KEYS.WORKERS, _workers)
-  notify()
+export async function saveWorker(worker) {
+  await api('/api/workers', {
+    method: 'POST',
+    body: JSON.stringify(worker)
+  })
+  await fetchWorkers()
 }
 
-// Contents
+export async function deleteWorker(id) {
+  await api(`/api/workers/${id}`, { method: 'DELETE' })
+  await fetchWorkers()
+}
+
+// ============ Contents ============
+
 export function getContents() { return _contents }
 
-export function addContent(content) {
-  if (!_contents.includes(content)) {
-    _contents.push(content)
-    save(KEYS.CONTENTS, _contents)
-    notify()
-  }
-}
-
-export function deleteContent(content) {
-  _contents = _contents.filter(c => c !== content)
-  save(KEYS.CONTENTS, _contents)
+export async function fetchContents() {
+  _contents = await api('/api/contents')
   notify()
 }
 
-// Records
+export async function addContent(content) {
+  await api('/api/contents', {
+    method: 'POST',
+    body: JSON.stringify({ content })
+  })
+  await fetchContents()
+}
+
+export async function deleteContent(content) {
+  await api(`/api/contents/${encodeURIComponent(content)}`, { method: 'DELETE' })
+  await fetchContents()
+}
+
+// ============ Records ============
+
 export function getRecords(filters = {}) {
   let records = [..._records]
 
@@ -97,61 +142,86 @@ export function getRecords(filters = {}) {
   return records.sort((a, b) => b.startTime - a.startTime)
 }
 
-export function addRecord(record) {
-  _records.push(record)
-  save(KEYS.RECORDS, _records)
+export async function fetchRecords(filters = {}) {
+  const params = new URLSearchParams()
+  if (filters.workerId) params.set('workerId', filters.workerId)
+  if (filters.date) params.set('date', filters.date)
+  if (filters.startDate) params.set('startDate', filters.startDate)
+  if (filters.endDate) params.set('endDate', filters.endDate)
+  
+  const query = params.toString()
+  _records = await api(`/api/records${query ? '?' + query : ''}`)
   notify()
 }
 
-export function updateRecord(record) {
-  const idx = _records.findIndex(r => r.id === record.id)
-  if (idx > -1) {
-    _records[idx] = record
-    save(KEYS.RECORDS, _records)
-    notify()
-  }
+export async function addRecord(record) {
+  await api('/api/records', {
+    method: 'POST',
+    body: JSON.stringify(record)
+  })
+  await fetchRecords()
 }
 
-export function deleteRecord(id) {
-  _records = _records.filter(r => r.id !== id)
-  save(KEYS.RECORDS, _records)
-  notify()
+export async function updateRecord(record) {
+  // 后端没有 update，用 delete + add
+  await api(`/api/records/${record.id}`, { method: 'DELETE' })
+  await api('/api/records', {
+    method: 'POST',
+    body: JSON.stringify(record)
+  })
+  await fetchRecords()
 }
 
-// Settings
+export async function deleteRecord(id) {
+  await api(`/api/records/${id}`, { method: 'DELETE' })
+  await fetchRecords()
+}
+
+// ============ Settings ============
+
 export function getSettings() { return _settings }
 
-export function saveSettings(settings) {
-  _settings = settings
-  save(KEYS.SETTINGS, _settings)
+export async function fetchSettings() {
+  _settings = await api('/api/settings')
   notify()
 }
 
-// Export / Import
-export function exportData() {
-  return {
-    version: '1.0',
-    exportedAt: Date.now(),
-    workers: _workers,
-    records: _records,
-    contents: _contents,
-    settings: _settings
+export async function saveSettings(settings) {
+  await api('/api/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings)
+  })
+  await fetchSettings()
+}
+
+// ============ Export / Import ============
+
+export async function exportData() {
+  return await api('/api/export')
+}
+
+export async function importData(data) {
+  await api('/api/import', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  await Promise.all([fetchWorkers(), fetchRecords(), fetchContents(), fetchSettings()])
+}
+
+export async function clearAll() {
+  await api('/api/clear', {
+    method: 'POST',
+    body: JSON.stringify({ confirm: 'CONFIRM_CLEAR_ALL_DATA' })
+  })
+  await Promise.all([fetchWorkers(), fetchRecords(), fetchContents(), fetchSettings()])
+}
+
+// ============ 初始化 ============
+
+export async function init() {
+  try {
+    await Promise.all([fetchWorkers(), fetchRecords(), fetchContents(), fetchSettings()])
+  } catch (e) {
+    console.error('初始化数据失败:', e)
   }
-}
-
-export function importData(data) {
-  if (data.workers) { _workers = data.workers; save(KEYS.WORKERS, _workers) }
-  if (data.records) { _records = data.records; save(KEYS.RECORDS, _records) }
-  if (data.contents) { _contents = data.contents; save(KEYS.CONTENTS, _contents) }
-  if (data.settings) { _settings = data.settings; save(KEYS.SETTINGS, _settings) }
-  notify()
-}
-
-export function clearAll() {
-  _workers = []; _records = []; _contents = defaultContents; _settings = { defaultHourlyRate: 25 }
-  save(KEYS.WORKERS, _workers)
-  save(KEYS.RECORDS, _records)
-  save(KEYS.CONTENTS, _contents)
-  save(KEYS.SETTINGS, _settings)
-  notify()
 }

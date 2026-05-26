@@ -73,11 +73,13 @@ function Home() {
     return '0.0'
   }
 
-  const handleDeleteRecord = (id) => {
-    if (window.confirm('确定删除这条记录吗？')) deleteRecord(id)
+  const handleDeleteRecord = async (id) => {
+    if (window.confirm('确定删除这条记录吗？')) {
+      await deleteRecord(id)
+    }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.workerId) return alert('请选择工人')
     if (!form.date) return alert('请选择日期')
     if (!form.startTime) return alert('请填写开始时间')
@@ -91,7 +93,7 @@ function Home() {
     const worker = workers.find(w => w.id === form.workerId)
     const content = form.customContent || form.content || '未填写'
 
-    addRecord({
+    await addRecord({
       id: generateId(),
       workerId: form.workerId,
       workerName: worker?.name || '',

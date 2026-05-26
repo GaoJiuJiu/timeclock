@@ -26,21 +26,21 @@ function People() {
     setShowModal(true)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) return alert('请输入姓名')
     if (!form.hourlyRate) return alert('请输入时薪')
 
     if (editingWorker) {
-      saveWorker({ ...editingWorker, name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone })
+      await saveWorker({ ...editingWorker, name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone })
     } else {
-      saveWorker({ id: generateId(), name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone, createdAt: Date.now() })
+      await saveWorker({ id: generateId(), name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone, createdAt: Date.now() })
     }
     setShowModal(false)
   }
 
-  const handleDelete = (worker) => {
+  const handleDelete = async (worker) => {
     if (window.confirm(`确定删除 ${worker.name} 吗？相关考勤记录不会删除。`)) {
-      deleteWorker(worker.id)
+      await deleteWorker(worker.id)
     }
   }
 

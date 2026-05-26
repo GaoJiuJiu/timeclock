@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { getContents, getSettings, addContent, deleteContent, getWorkers, getRecords, exportData, importData, clearAll, subscribe } from '../utils/storage'
 import * as XLSX from 'xlsx'
 
-function Settings() {
+function Settings({ onLogout }) {
   const [contents, setContents] = useState([])
   const [settings, setSettings] = useState({})
   const [workers, setWorkers] = useState([])
@@ -22,14 +22,16 @@ function Settings() {
     return unsubscribe
   }, [])
 
-  const handleAddContent = () => {
+  const handleAddContent = async () => {
     if (!newContent.trim()) return
-    addContent(newContent.trim())
+    await addContent(newContent.trim())
     setNewContent('')
   }
 
-  const handleRemoveContent = (content) => {
-    if (window.confirm(`删除工作内容「${content}」？`)) deleteContent(content)
+  const handleRemoveContent = async (content) => {
+    if (window.confirm(`删除工作内容「${content}」？`)) {
+      await deleteContent(content)
+    }
   }
 
   const exportExcel = () => {
@@ -66,8 +68,8 @@ function Settings() {
     XLSX.writeFile(wb, filename)
   }
 
-  const exportJSON = () => {
-    const data = exportData()
+  const exportJSON = async () => {
+    const data = await exportData()
     const json = JSON.stringify(data, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -80,15 +82,15 @@ function Settings() {
 
   const triggerImport = () => fileInputRef.current.click()
 
-  const onFileSelected = (e) => {
+  const onFileSelected = async (e) => {
     const file = e.target.files[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
         if (data.version) {
-          importData(data)
+          await importData(data)
           alert('数据导入成功！')
         } else {
           alert('文件格式不正确')
@@ -99,10 +101,10 @@ function Settings() {
     e.target.value = ''
   }
 
-  const doClear = () => {
+  const doClear = async () => {
     if (window.confirm('确定清除所有数据吗？此操作不可恢复！')) {
       if (window.confirm('再次确认：真的要清除吗？')) {
-        clearAll()
+        await clearAll()
         alert('数据已清除')
       }
     }
@@ -127,6 +129,14 @@ function Settings() {
         <div className="setting-item">
           <span className="setting-label">默认时薪</span>
           <span className="setting-value">¥{settings.defaultHourlyRate}/小时</span>
+        </div>
+      </div>
+
+      <div className="setting-group">
+        <div className="setting-group-title">账户</div>
+        <div className="setting-item" onClick={onLogout} style={{ color: 'var(--red)' }}>
+          <span className="setting-label" style={{ color: 'var(--red)' }}>退出登录</span>
+          <span className="setting-value">切换账户</span>
         </div>
       </div>
 
