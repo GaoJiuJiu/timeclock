@@ -7,7 +7,7 @@ function People() {
   const [workers, setWorkers] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [editingWorker, setEditingWorker] = useState(null)
-  const [form, setForm] = useState({ name: '', hourlyRate: 25, phone: '' })
+  const [form, setForm] = useState({ name: '', payType: 'hourly', rate: '', phone: '' })
 
   useEffect(() => {
     fetchAll()
@@ -16,25 +16,35 @@ function People() {
 
   const openAddModal = () => {
     setEditingWorker(null)
-    setForm({ name: '', hourlyRate: 25, phone: '' })
+    setForm({ name: '', payType: 'hourly', rate: '', phone: '' })
     setShowModal(true)
   }
 
   const openEditModal = (worker) => {
     setEditingWorker(worker)
-    setForm({ name: worker.name, hourlyRate: worker.hourlyRate, phone: worker.phone || '' })
+    setForm({ 
+      name: worker.name, 
+      payType: worker.payType || 'hourly', 
+      rate: worker.rate || worker.hourlyRate || '', 
+      phone: worker.phone || '' 
+    })
     setShowModal(true)
   }
 
   const handleSave = async () => {
     if (!form.name.trim()) return alert('请输入姓名')
-    if (!form.hourlyRate) return alert('请输入时薪')
+    if (!form.rate) return alert('请输入费率')
 
-    if (editingWorker) {
-      await saveWorker({ ...editingWorker, name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone })
-    } else {
-      await saveWorker({ id: generateId(), name: form.name.trim(), hourlyRate: form.hourlyRate, phone: form.phone, createdAt: Date.now() })
+    const data = {
+      id: editingWorker ? editingWorker.id : generateId(),
+      name: form.name.trim(),
+      payType: form.payType,
+      rate: Number(form.rate),
+      phone: form.phone,
+      createdAt: editingWorker ? editingWorker.createdAt : Date.now()
     }
+    
+    await saveWorker(data)
     setShowModal(false)
   }
 
@@ -44,7 +54,7 @@ function People() {
     }
   }
 
-  // 计算 本月统计，缓存优化
+  // 计算 本月统计
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime()
@@ -62,6 +72,15 @@ function People() {
     })
     statsMap[w.id] = { days: days.size, hours }
   })
+
+  const getPayTypeLabel = (worker) => {
+    const type = worker.payType || 'hourly'
+    const rate = worker.rate || worker.hourlyRate || 25
+    if (type === 'daily') {
+      return `日薪 ¥${rate}`
+    }
+    return `时薪 ¥${rate}`
+  }
 
   const updateForm = (patch) => setForm(prev => ({ ...prev, ...patch }))
 
@@ -83,7 +102,7 @@ function People() {
             <div className="person-info">
               <div className="person-name-lg">{worker.name}</div>
               <div className="person-meta">
-                时薪 ¥{worker.hourlyRate} · 本月 {stats.days}天 · {stats.hours.toFixed(1)}h
+                {getPayTypeLabel(worker)} · 本月 {stats.days}天 · {stats.hours.toFixed(1)}h
               </div>
             </div>
             <div className="person-actions-row">
@@ -110,8 +129,33 @@ function People() {
         </div>
 
         <div className="form-group">
-          <label className="form-label">时薪（元/小时）</label>
-          <input type="number" className="form-input" placeholder="25" value={form.hourlyRate} onChange={e => updateForm({ hourlyRate: Number(e.target.value) })} />
+          <label className="form-label">计费方式</label>
+          <div className="pay-type-tabs">
+            <button 
+              className={`pay-type-tab ${form.payType === 'hourly' ? 'active' : ''}`}
+              onClick={() => updateForm({ payType: 'hourly' })}
+            >
+              按小时
+            </button>
+            <button 
+              className={`pay-type-tab ${form.payType === 'daily' ? 'active' : ''}`}
+              onClick={() => updateForm({ payType: 'daily' })}
+            >
+              按天
+            </button>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">{form.payType === 'daily' ? '日薪（元/天）' : '时薪（元/小时）'}</label>
+          <input 
+            type="number" 
+            step="0.1"
+            className="form-input" 
+            placeholder={form.payType === 'daily' ? '200' : '25'} 
+            value={form.rate} 
+            onChange={e => updateForm({ rate: e.target.value })} 
+          />
         </div>
 
         <div className="form-group">

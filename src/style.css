@@ -507,3 +507,28 @@ html, body, #root {
 .loading-spinner {
   font-size: 32px;
 }
+/* 计费类型选择器 */
+.pay-type-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+.pay-type-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.pay-type-tab.active {
+  background: var(--bg-card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+

@@ -79,13 +79,20 @@ function Stats() {
       })
 
       const hours = totalMs / 1000 / 3600
+      const payType = w.payType || 'hourly'
+      const rate = w.rate || w.hourlyRate || 25
+      
+      // 按天计费用天数，按时薪用工时
+      const amount = payType === 'daily' ? days.size * rate : hours * rate
 
       return {
         workerId: w.id,
         name: w.name,
+        payType,
+        rate,
         days: days.size,
         hours,
-        amount: hours * w.hourlyRate
+        amount
       }
     })
   }, [workers, dateRange])
