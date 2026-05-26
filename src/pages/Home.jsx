@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getWorkers, getContents, getRecords, addRecord, deleteRecord, subscribe } from '../utils/storage'
+import { getWorkers, getContents, getRecords, addRecord, deleteRecord, subscribe, fetchAll } from '../utils/storage'
 import { formatTime, getDateLabel, getAvatarColor, getInitial, generateId } from '../utils/format'
 import Modal from '../components/Modal'
 
@@ -20,8 +20,7 @@ function Home() {
   })
 
   useEffect(() => {
-    setWorkers(getWorkers())
-    setContents(getContents())
+    fetchAll()
     return subscribe(() => {
       setWorkers(getWorkers())
       setContents(getContents())
@@ -47,13 +46,38 @@ function Home() {
   const toDateString = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
+  const getCurrentTime = () => {
+    const now = new Date()
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  }
+
   const openAddModal = () => {
-    setForm({ workerId: '', date: toDateString(currentDate), startTime: '', endTime: '', content: '', customContent: '', note: '' })
+    const now = new Date()
+    const endTime = new Date(now.getTime() + 4 * 3600 * 1000)
+    setForm({
+      workerId: '',
+      date: toDateString(currentDate),
+      startTime: getCurrentTime(),
+      endTime: `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`,
+      content: '',
+      customContent: '',
+      note: ''
+    })
     setShowModal(true)
   }
 
   const openAddModalFor = (worker) => {
-    setForm({ workerId: worker.id, date: toDateString(currentDate), startTime: '', endTime: '', content: '', customContent: '', note: '' })
+    const now = new Date()
+    const endTime = new Date(now.getTime() + 4 * 3600 * 1000)
+    setForm({
+      workerId: worker.id,
+      date: toDateString(currentDate),
+      startTime: getCurrentTime(),
+      endTime: `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`,
+      content: '',
+      customContent: '',
+      note: ''
+    })
     setShowModal(true)
   }
 
@@ -74,9 +98,7 @@ function Home() {
   }
 
   const handleDeleteRecord = async (id) => {
-    if (window.confirm('确定删除这条记录吗？')) {
-      await deleteRecord(id)
-    }
+    if (window.confirm('确定删除这条记录吗？')) await deleteRecord(id)
   }
 
   const handleSubmit = async () => {
@@ -193,11 +215,25 @@ function Home() {
         <div style={{ display: 'flex', gap: 12 }}>
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">开始时间</label>
-            <input type="time" className="form-input" value={form.startTime} onChange={e => updateForm({ startTime: e.target.value })} />
+            <input
+              type="time"
+              className="form-input"
+              value={form.startTime}
+              onChange={e => updateForm({ startTime: e.target.value })}
+              onTouchStart={e => e.target.focus()}
+              inputMode="numeric"
+            />
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">结束时间</label>
-            <input type="time" className="form-input" value={form.endTime} onChange={e => updateForm({ endTime: e.target.value })} />
+            <input
+              type="time"
+              className="form-input"
+              value={form.endTime}
+              onChange={e => updateForm({ endTime: e.target.value })}
+              onTouchStart={e => e.target.focus()}
+              inputMode="numeric"
+            />
           </div>
         </div>
 

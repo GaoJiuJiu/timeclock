@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getWorkers, saveWorker, deleteWorker, getRecords, subscribe } from '../utils/storage'
+import { getWorkers, saveWorker, deleteWorker, getRecords, subscribe, fetchAll } from '../utils/storage'
 import { getAvatarColor, getInitial, generateId } from '../utils/format'
 import Modal from '../components/Modal'
 
@@ -10,7 +10,7 @@ function People() {
   const [form, setForm] = useState({ name: '', hourlyRate: 25, phone: '' })
 
   useEffect(() => {
-    setWorkers(getWorkers())
+    fetchAll()
     return subscribe(() => setWorkers(getWorkers()))
   }, [])
 
